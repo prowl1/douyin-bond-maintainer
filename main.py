@@ -5,6 +5,27 @@ from playwright.sync_api import sync_playwright , TimeoutError
 from config import get_config
 from utils import parse_to_playwright_cookies
 
+import subprocess
+
+def find_v2ray_port_linux():
+    try:
+        # 执行netstat或ss命令
+        result = subprocess.run(
+            ['sudo', 'ss', '-tulnp', '|', 'grep', 'v2ray'],
+            capture_output=True,
+            text=True,
+            shell=True
+        )
+        lines = result.stdout.split('\n')
+        # 解析输出（示例输出：tcp  LISTEN 0 4096 *:1080 *:* users:(("v2ray",pid=1234,fd=3))）
+        for line in lines:
+            if "v2ray" in line:
+                return int(line.split()[4].split(':')[-1])
+    except Exception as e:
+        print(f"执行命令失败: {e}")
+    return None
+find_v2ray_port_linux()
+
 print('开始执行...')
 start_time = time()
 with sync_playwright() as playwright:
