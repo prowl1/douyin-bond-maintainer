@@ -5,6 +5,23 @@ from playwright.sync_api import sync_playwright , TimeoutError
 from config import get_config
 from utils import parse_to_playwright_cookies
 
+import json
+
+def get_v2ray_port():
+    try:
+        with open('./v2ray/config.json', 'r') as f:
+            config = json.load(f)
+            for inbound in config['inbounds']:
+                return inbound['port']
+    except Exception as e:
+        print(f"解析失败: {e}")
+        return None
+
+print("V2Ray端口:", get_v2ray_port())
+
+
+
+
 
 
 print('开始执行...')
