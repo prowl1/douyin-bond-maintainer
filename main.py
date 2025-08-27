@@ -5,26 +5,56 @@ from playwright.sync_api import sync_playwright , TimeoutError
 from config import get_config
 from utils import parse_to_playwright_cookies
 
-import subprocess
 
-def find_v2ray_port_linux():
+
+
+import os
+import json
+
+def get_v2ray_config():
+    """
+    读取并解析当前目录下的 v2ray/config.json 配置文件
+    返回字典格式的配置数据
+    """
+    config_path = os.path.join(".", "v2ray", "config.json")  # 兼容各操作系统的路径格式
+    
     try:
-        # 执行netstat或ss命令
-        result = subprocess.run(
-            ['sudo', 'ss', '-tulnp', '|', 'grep', 'v2ray'],
-            capture_output=True,
-            text=True,
-            shell=True
-        )
-        lines = result.stdout.split('\n')
-        # 解析输出（示例输出：tcp  LISTEN 0 4096 *:1080 *:* users:(("v2ray",pid=1234,fd=3))）
-        for line in lines:
-            if "v2ray" in line:
-                return int(line.split()[4].split(':')[-1])
+        # 检查文件是否存在
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"配置文件未找到: {os.path.abspath(config_path)}")
+        
+        # 检查文件读取权限
+        if not os.access(config_path, os.R_OK):
+            raise PermissionError(f"无读取权限: {config_path}")
+
+        # 读取文件内容
+        with open(config_path, "r", encoding="utf-8") as f:
+            config_data = json.load(f)
+            return config_data
+            
+    except json.JSONDecodeError as e:
+        print(f"JSON格式错误（第{e.lineno}行）: {e.msg}")
     except Exception as e:
-        print(f"执行命令失败: {e}")
+        print(f"配置读取失败: {type(e).__name__} - {str(e)}")
+    
     return None
-print(find_v2ray_port_linux())
+
+# 使用示例
+def get_v2ray():
+    config = get_v2ray_config()
+    if config:
+        # 打印关键配置信息
+        print("="*40 + " V2Ray配置详情 " + "="*40)
+        for inbound in config.get("inbounds", []):
+            print(f"[监听端口] {inbound.get('port')}")
+            print(f"[协议类型] {inbound.get('protocol')}")
+            print("-"*60)
+    else:
+        print("未能获取有效配置")
+
+get_v2ray()
+
+
 
 print('开始执行...')
 start_time = time()
