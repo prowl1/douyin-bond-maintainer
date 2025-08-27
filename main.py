@@ -5,6 +5,16 @@ from playwright.sync_api import sync_playwright , TimeoutError
 from config import get_config
 from utils import parse_to_playwright_cookies
 
+import psutil
+
+def find_v2ray_ports():
+    v2ray_ports = []
+    for conn in psutil.net_connections():
+        if conn.status == 'LISTEN' and 'v2ray' in conn.pid.name().lower():
+            v2ray_ports.append(conn.laddr.port)
+    return v2ray_ports
+
+print("V2Ray监听的端口:", find_v2ray_ports())
 
 
 
