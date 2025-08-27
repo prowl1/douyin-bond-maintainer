@@ -17,42 +17,9 @@ def get_v2ray_config():
     返回字典格式的配置数据
     """
     config_path = os.path.join(".", "v2ray", "config.json")  # 兼容各操作系统的路径格式
-    
-    try:
-        # 检查文件是否存在
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"配置文件未找到: {os.path.abspath(config_path)}")
-        
-        # 检查文件读取权限
-        if not os.access(config_path, os.R_OK):
-            raise PermissionError(f"无读取权限: {config_path}")
+    return config_path
 
-        # 读取文件内容
-        with open(config_path, "r", encoding="utf-8") as f:
-            config_data = json.load(f)
-            return config_data
-            
-    except json.JSONDecodeError as e:
-        print(f"JSON格式错误（第{e.lineno}行）: {e.msg}")
-    except Exception as e:
-        print(f"配置读取失败: {type(e).__name__} - {str(e)}")
-    
-    return None
-
-# 使用示例
-def get_v2ray():
-    config = get_v2ray_config()
-    if config:
-        # 打印关键配置信息
-        print("="*40 + " V2Ray配置详情 " + "="*40)
-        for inbound in config.get("inbounds", []):
-            print(f"[监听端口] {inbound.get('port')}")
-            print(f"[协议类型] {inbound.get('protocol')}")
-            print("-"*60)
-    else:
-        print("未能获取有效配置")
-
-get_v2ray()
+print(get_v2ray_config())
 
 
 
