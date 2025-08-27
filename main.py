@@ -24,7 +24,7 @@ def find_v2ray_port_linux():
     except Exception as e:
         print(f"执行命令失败: {e}")
     return None
-find_v2ray_port_linux()
+print(find_v2ray_port_linux())
 
 print('开始执行...')
 start_time = time()
