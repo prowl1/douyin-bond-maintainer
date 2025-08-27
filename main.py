@@ -7,24 +7,6 @@ from utils import parse_to_playwright_cookies
 
 
 
-
-import os
-import json
-
-def get_v2ray_config():
-    """
-    读取并解析当前目录下的 v2ray/config.json 配置文件
-    返回字典格式的配置数据
-    """
-    config_path = os.path.join(".", "v2ray", "config.json")  # 兼容各操作系统的路径格式
-
-    with open(config_path, "r", encoding="utf-8") as f:
-        print(f)
-
-get_v2ray_config()
-
-
-
 print('开始执行...')
 start_time = time()
 with sync_playwright() as playwright:
