@@ -39,6 +39,10 @@ jobs:
           curl -LO https://github.com/v2fly/v2ray-core/releases/latest/download/v2ray-linux-64.zip
           unzip v2ray-linux-64.zip -d v2ray
           echo "${{ secrets.V2RAY_CONFIG }}" | base64 --decode > v2ray/config.json
+          
+      - name: Look V2Rayconfig
+        run: cat ./v2ray/config.json
+
 
       - name: Run V2Ray
         if: env.HAS_V2RAY == 'true'
