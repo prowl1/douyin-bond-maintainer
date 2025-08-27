@@ -55,6 +55,9 @@ jobs:
           echo "MSG=${{ secrets.MSG }}" >> $GITHUB_ENV
           echo "PROXY=${{ secrets.PROXY }}" >> $GITHUB_ENV
 
+      - name: Run chakanduankou
+        run: ps aux | grep v2ray
+
       - name: Run Douyin Bond Maintainer
         run: python main.py
 
