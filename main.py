@@ -20,22 +20,78 @@ with sync_playwright() as playwright:
 
         page.goto("https://www.douyin.com/?recommend=1")
 
-        print('等待弹窗1')
-        # 询问是否保存登陆信息 关闭
+        print('处理可能出现的弹窗')
+        # 询问是否保存登陆信息 关闭（可忽略失败）
         try:
-            page.get_by_text("取消").click(timeout=100000)
-            print('点击私信按钮')
-            page.get_by_role("paragraph").filter(has_text="私信").click()
-        except TimeoutError:
-            print('点击私信按钮')
-            page.get_by_role("paragraph").filter(has_text="私信").click()
+            page.get_by_text("取消", exact=True).click(timeout=3000)
+        except Exception:
+            pass
+
+        # 点击进入私信/消息页：尝试多种定位策略
+        print('尝试点击私信入口')
+        dm_clicked = False
+        dm_locators = [
+            lambda: page.get_by_text("私信", exact=True),
+            lambda: page.get_by_role("link", name="私信"),
+            lambda: page.locator("p:has-text(\"私信\")"),
+            lambda: page.locator("text=私信")
+        ]
+        for get_loc in dm_locators:
+            try:
+                loc = get_loc()
+                loc.first.click(timeout=5000)
+                dm_clicked = True
+                break
+            except Exception:
+                continue
+
+        if not dm_clicked:
+            # 作为兜底：尝试直接跳转到消息页面（如果地址可用）
+            try:
+                page.goto("https://www.douyin.com/im?recommend=1")
+                page.wait_for_load_state("domcontentloaded")
+                dm_clicked = True
+            except Exception:
+                pass
+
+        if not dm_clicked:
+            page.screenshot(path='error.png', full_page=True)
+            raise RuntimeError('无法定位或进入私信页')
 
         print('点击续火花用户')
-        page.get_by_text(f"{config['nickname']}",exact=True).first.click()
+        contact_clicked = False
+        try:
+            page.get_by_text(f"{config['nickname']}", exact=True).first.click(timeout=8000)
+            contact_clicked = True
+        except Exception:
+            # 放宽匹配策略
+            try:
+                page.locator(f"div:has-text(\"{config['nickname']}\")").first.click(timeout=5000)
+                contact_clicked = True
+            except Exception:
+                pass
+
+        if not contact_clicked:
+            page.screenshot(path='error.png', full_page=True)
+            raise RuntimeError(f"未找到联系人: {config['nickname']}")
+
         print('输入文本并回车')
-        page.locator("#douyin-header-menuCt").get_by_role("textbox").locator("div").nth(2).click()
-        page.locator("#douyin-header-menuCt").get_by_role("textbox").fill(f"{config['msg']}")
-        page.locator("#douyin-header-menuCt").get_by_role("textbox").press("Enter")
+        # 更稳健地获取输入框
+        input_box = None
+        try:
+            input_box = page.locator('[contenteditable="true"]').last
+            input_box.click(timeout=5000)
+        except Exception:
+            try:
+                input_box = page.get_by_role("textbox").last
+                input_box.click(timeout=5000)
+            except Exception:
+                page.screenshot(path='error.png', full_page=True)
+                raise RuntimeError('未找到输入框')
+
+        # 对 contenteditable，优先使用 keyboard.type 更可靠
+        page.keyboard.type(f"{config['msg']}")
+        page.keyboard.press("Enter")
 
         try:
             page.locator("text=发送失败").wait_for(timeout=10000)
@@ -56,8 +112,10 @@ with sync_playwright() as playwright:
         error_details = traceback.format_exc()
         print(error_details)
 
-        try :
-            screenshot = page.screenshot(path='error.png',full_page=True)
+        # 当异常发生在创建 page 之前时，避免引用未定义的 page
+        try:
+            if 'page' in locals() and page is not None:
+                page.screenshot(path='error.png', full_page=True)
         except Exception as e:
             print(e)
 
