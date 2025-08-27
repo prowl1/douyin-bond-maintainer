@@ -19,7 +19,7 @@ def get_v2ray_config():
     config_path = os.path.join(".", "v2ray", "config.json")  # 兼容各操作系统的路径格式
 
     with open(config_path, "r", encoding="utf-8") as f:
-        print f
+        print(f)
 
 get_v2ray_config()
 
