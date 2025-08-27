@@ -17,7 +17,10 @@ def get_v2ray_config():
     返回字典格式的配置数据
     """
     config_path = os.path.join(".", "v2ray", "config.json")  # 兼容各操作系统的路径格式
-    return config_path
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        config_data = json.load(f)
+        return config_data
 
 print(get_v2ray_config())
 
